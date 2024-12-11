@@ -1,0 +1,18 @@
+{
+  "page_title": "Central Bank of Libya Reports - Summarization Tool",
+  "reports_label": "Available Files",
+  "report_type_label": "Report Type",
+  "year_label": "Year",
+  "all": "All",
+  "view_button_text": "View",
+  "summarize_button_text": "Summarize Text",
+  "summary_label": "Summary",
+  "file_display_label": "PDF Viewer",
+  "no_files_warning": "No files available for this type and year.",
+  "load_error_message": "Failed to load the file. Please try again.",
+  "loading_summary_message": "Summarizing the text...",
+  "summary_success_message": "Report summarized successfully.",
+  "summary_error_message": "Error fetching summary",
+  "logout": "log out",
+  "no_pdf_selected": "No PDF selected"
+}

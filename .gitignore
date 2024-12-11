@@ -1,0 +1,6 @@
+.env
+venv
+node_modules
+*.pyc
+backend.zip
+*.zip

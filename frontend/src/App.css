@@ -1,0 +1,35 @@
+* {
+  padding: 0;
+  margin: 0;
+  font-family: "Tajawal", sans-serif !important;
+}
+.MuiDataGrid-scrollbar {
+  overflow-y: hidden !important;
+}
+
+.outer-ring {
+  position: absolute;
+  top: -20px; /* Adjust position to center the ring */
+  left: -20px; /* Adjust position to center the ring */
+  width: 440px; /* Slightly larger than the circle for the ring */
+  height: 440px;
+  border: 5px solid rgba(0, 94, 255, 0.2); /* Light transparent blue for the ring */
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.inner-circle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #005eff 60%, #ffffff 61%);
+  z-index: 2;
+}
+.form-container {
+  box-shadow: hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px,
+    hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px;
+}
+input#name,
+input#password {
+  padding: 12px;
+}
