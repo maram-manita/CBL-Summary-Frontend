@@ -12,10 +12,13 @@ import {
   Button,
   Stack,
   Typography,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
+import { HiOutlineGlobeAlt } from "react-icons/hi";
 
 const SignInContainer = styled(Stack)(({ theme }) => ({
   height: "calc((1 - var(--template-frame-height, 0)) * 100dvh)",
@@ -60,8 +63,9 @@ const CardCustom = styled(MuiCard)(({ theme }) => ({
 }));
 
 const Login = ({ handleFeedback }) => {
-  const [userNameError, setuserNameError] = React.useState(false);
-  const [passwordError, setPasswordError] = React.useState(false);
+  const [userNameError, setuserNameError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -96,6 +100,48 @@ const Login = ({ handleFeedback }) => {
 
   return (
     <SignInContainer direction="column" justifyContent="space-between">
+      <div>
+        <Button
+          onClick={() => {
+            setOpen(!open);
+          }}
+        >
+          English
+        </Button>
+        <Menu
+          onClick={() => {
+            setOpen(false);
+          }}
+          open={open}
+          sx={{
+            mt: 6.5,
+            ml: 1.5,
+            "& .MuiAvatar-root": {
+              width: 32,
+              height: 32,
+              ml: -0.5,
+              mr: 1,
+            },
+            "&::before": {
+              content: '""',
+              display: "block",
+              position: "absolute",
+              top: 0,
+              right: 14,
+              width: 10,
+              height: 10,
+              bgcolor: "background.paper",
+              transform: "translateY(-50%) rotate(45deg)",
+              zIndex: 0,
+            },
+          }}
+          transformOrigin={{ horizontal: "left", vertical: "top" }}
+          anchorOrigin={{ horizontal: "left", vertical: "top" }}
+        >
+          <MenuItem>Arabic</MenuItem>
+        </Menu>
+      </div>
+
       <CardCustom>
         <Typography
           component="h1"

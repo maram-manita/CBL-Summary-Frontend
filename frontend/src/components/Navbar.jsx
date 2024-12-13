@@ -1,6 +1,5 @@
 import React from "react";
 import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { HiOutlineGlobeAlt } from "react-icons/hi";
 import { useNavigate } from "react-router-dom"; // Import useNavigate

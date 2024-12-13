@@ -32,7 +32,7 @@ const App = () => {
     });
     setTimeout(() => {
       setFeedback((prev) => ({ ...prev, showAlert: false }));
-    }, 3000);
+    }, 3500);
   };
   const toggleLanguage = () => {
     const currentLanguage = i18n.language || "en"; // Get current language from i18n
@@ -47,6 +47,7 @@ const App = () => {
 
   useEffect(() => {
     document.dir = i18n.language === "ar" ? "rtl" : "ltr";
+    console.log(i18n.language);
   }, [i18n.language]);
 
   return (

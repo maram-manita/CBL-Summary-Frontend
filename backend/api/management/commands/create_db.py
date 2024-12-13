@@ -1,16 +1,15 @@
-import os
 import re
+from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from api.models import Report
 
 class Command(BaseCommand):
-    help = 'Populate the database with report data using remote URL paths.'
+    help = 'Populate the database with report data using remote URL paths (no "reports" in paths).'
 
     def handle(self, *args, **options):
-        # Directory containing the reports locally (assuming it still exists)
-        # If you no longer have them locally, you'll need a different approach.
-        media_reports_dir = os.path.join(settings.MEDIA_ROOT, "reports")
+        # Directory containing the reports locally
+        media_dir = Path(settings.MEDIA_ROOT)
 
         # Base URL prefix where files are now hosted
         base_url = "http://206.189.52.179/api/files/CBL_Reports/"
@@ -22,25 +21,22 @@ class Command(BaseCommand):
             return str(max(valid_years)) if valid_years else 'عام'
 
         # Identify folders in the local directory
-        folders = [
-            folder for folder in os.listdir(media_reports_dir)
-            if os.path.isdir(os.path.join(media_reports_dir, folder))
-        ]
+        folders = [f for f in media_dir.iterdir() if f.is_dir()]
 
         for folder in folders:
-            folder_path = os.path.join(media_reports_dir, folder)
-            report_type = folder
+            report_type = folder.name
 
-            if os.path.exists(folder_path):
+            if folder.exists():
                 file_groups = {}
+                
                 # Group files by their base name (ignoring extension)
-                for file_name in os.listdir(folder_path):
-                    file_path = os.path.join(folder_path, file_name)
-                    if os.path.isfile(file_path):
-                        base_name, ext = os.path.splitext(file_name)
+                for file_path in folder.iterdir():
+                    if file_path.is_file():
+                        base_name = file_path.stem
+                        ext = file_path.suffix
                         if base_name not in file_groups:
                             file_groups[base_name] = {}
-                        file_groups[base_name][ext] = file_name
+                        file_groups[base_name][ext] = file_path.name
 
                 # Create Report entries
                 for base_name, files in file_groups.items():
@@ -49,14 +45,9 @@ class Command(BaseCommand):
 
                     year = extract_year(base_name)
 
-                    # Construct the remote URL paths
-                    pdf_rel_path = None
-                    if pdf_file_name:
-                        pdf_rel_path = f"{base_url}{report_type}/{pdf_file_name}"
-
-                    md_rel_path = None
-                    if md_file_name:
-                        md_rel_path = f"{base_url}{report_type}/{md_file_name}"
+                    # Construct the remote URL paths without adding any "reports" directory
+                    pdf_rel_path = f"{base_url}{pdf_file_name}" if pdf_file_name else None
+                    md_rel_path = f"{base_url}{md_file_name}" if md_file_name else None
 
                     Report.objects.create(
                         report_type=report_type,
@@ -66,4 +57,4 @@ class Command(BaseCommand):
                         md_path=md_rel_path
                     )
 
-        self.stdout.write("Report data populated into the database with remote URL paths.")
+        self.stdout.write("Report data populated into the database with simplified remote URL paths.")
