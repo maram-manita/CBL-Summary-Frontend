@@ -13,6 +13,7 @@
   "loading_summary_message": "Summarizing the text...",
   "summary_success_message": "Report summarized successfully.",
   "summary_error_message": "Error fetching summary",
+  "sign_in": "Sign in",
   "logout": "log out",
   "no_pdf_selected": "No PDF selected"
 }

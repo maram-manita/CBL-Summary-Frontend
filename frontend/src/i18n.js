@@ -17,6 +17,13 @@ i18n
       },
     },
     fallbackLng: "en", // Default language
+    load: "languageOnly",
+    detection: {
+      caches: ["localStorage", "cookie"], // Cache detected language
+      checkWhiteList: true,
+    },
+
+    whitelist: ["en", "ar"],
     interpolation: {
       escapeValue: false, // React already escapes output
     },

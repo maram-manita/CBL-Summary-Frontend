@@ -5,26 +5,31 @@ import ReportsGrid from "../components/ReportsGrid";
 import Navbar from "../components/Navbar";
 import Filters from "../components/Filters";
 import PdfViewer from "../components/PdfViewer";
-import { Typography, Grid2 as Grid, Box } from "@mui/material";
+import { Typography, Grid2 as Grid, Box, Skeleton } from "@mui/material";
 import i18n from "../i18n";
 import { useTranslation } from "react-i18next";
 import { getReports } from "../api"; // Import getReports function
+import LoadingSkeleton from "../components/LoadingSkeleton";
 
 const Home = ({ handleFeedback, toggleLanguage }) => {
+  const [loading, setLoading] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [selectedPdf, setSelectedPdf] = useState(null);
   const [data, setData] = useState([]);
   const [filters, setFilters] = useState({ reportType: "", year: "" });
-  const APP_URL = import.meta.env.VITE_APP_URL;
 
   const { t } = useTranslation();
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const jsonData = await getReports(); // Use getReports instead of fetch
+      const jsonData = await getReports();
       setData(jsonData);
     } catch (error) {
       console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+      console.log(data.length);
     }
   };
 
@@ -67,29 +72,32 @@ const Home = ({ handleFeedback, toggleLanguage }) => {
           {t("page_title")}
         </Typography>
       </Box>
-
-      <Filters
-        handleFilterChange={handleFilterChange}
-        data={data}
-        filters={filters}
-      />
-
-      <ReportsGrid
-        filteredData={filteredData}
-        selectedFiles={selectedFiles}
-        setSelectedFiles={setSelectedFiles}
-        handleViewPdf={handleViewPdf}
-      />
-
-      <Grid container spacing={2} p={2}>
-        <Summary
-          selectedFiles={selectedFiles}
-          language={i18n.language}
-          data={data}
-          handleFeedback={handleFeedback}
-        />
-        <PdfViewer selectedPdf={selectedPdf} />
-      </Grid>
+      {!loading || data.length > 0 ? (
+        <>
+          <Filters
+            handleFilterChange={handleFilterChange}
+            data={data}
+            filters={filters}
+          />
+          <ReportsGrid
+            filteredData={filteredData}
+            selectedFiles={selectedFiles}
+            setSelectedFiles={setSelectedFiles}
+            handleViewPdf={handleViewPdf}
+          />
+          <Grid container spacing={2} p={2}>
+            <Summary
+              selectedFiles={selectedFiles}
+              language={i18n.language}
+              data={data}
+              handleFeedback={handleFeedback}
+            />
+            <PdfViewer selectedPdf={selectedPdf} />
+          </Grid>
+        </>
+      ) : (
+        <LoadingSkeleton />
+      )}
     </ProtectedRoute>
   );
 };

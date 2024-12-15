@@ -1,6 +1,13 @@
 import React from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import { Button, Box } from "@mui/material";
+import {
+  Button,
+  Box,
+  Skeleton,
+  Grid2 as Grid,
+  Container,
+  Paper,
+} from "@mui/material";
 import { useTranslation } from "react-i18next";
 import "../App.css";
 
