@@ -14,6 +14,13 @@
   "summary_success_message": "تم تلخيص التقرير بنجاح.",
   "summary_error_message": "حدث خطأ في التلخيص",
   "sign_in": "تسجيل الدخول",
+  "username": "كلمة المرور",
+  "password": "كلمة السر",
+  "login": "تسجيل الدخول",
+  "log_in": "تسجيل الدخول",
+
   "logout": "تسجيل الخروج",
-  "no_pdf_selected": "يرجى اختيار مستند"
+  "no_pdf_selected": "يرجى اختيار مستند",
+  "session_expired": "يرجى تسجيل الدخول مرة اخرى",
+  "login_error": "كلمة المرور غير صحيحة"
 }

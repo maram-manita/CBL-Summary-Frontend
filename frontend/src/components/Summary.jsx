@@ -6,20 +6,18 @@ import {
   Card,
   Grid2 as Grid,
   CircularProgress,
+  Box,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { MuiMarkdown, getOverrides } from "mui-markdown";
 import { summarizeReports } from "../api";
 import { BiExport } from "react-icons/bi";
-import jsPDF from "jspdf";
 import html2pdf from "html2pdf.js";
-import html2canvas from "html2canvas";
 
 const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
   const { t } = useTranslation();
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
-  const summaryRef = useRef(null);
 
   const fetchSummary = async () => {
     setLoading(true);
@@ -35,49 +33,12 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
       setLoading(false);
     }
   };
-  const exportToPDF = async () => {
-    console.log(summaryRef.current);
-    if (!summaryRef.current) return;
+  const exportToPDF = () => {
+    const element = document.querySelector("#summary");
 
-    // Convert the summary DOM to canvas
-    const canvas = await html2canvas(summaryRef.current, {
-      useCORS: true,
-      scale: 1,
-      scrollX: 0,
-      scrollY: -window.scrollY, // Ensure the page doesn't shift
-      x: 0,
-      y: 0,
+    html2pdf(element, {
+      margin: 20,
     });
-
-    const imgData = canvas.toDataURL("image/png");
-
-    // Create PDF
-    const pdf = new jsPDF({
-      orientation: "p",
-      unit: "pt",
-      format: "a4",
-    });
-
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    const imgProps = pdf.getImageProperties(imgData);
-    const imgAspectRatio = imgProps.width / imgProps.height;
-
-    let renderedHeight = pdfWidth / imgAspectRatio;
-
-    const margin = 10; // Add margins around the content
-
-    pdf.addImage(
-      imgData,
-      "PNG",
-      margin,
-      margin,
-      pdfWidth - 2 * margin,
-      renderedHeight
-    );
-
-    pdf.save("summary.pdf");
   };
   return (
     <Grid item size={7}>
@@ -85,31 +46,48 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
         <Typography sx={{ fontSize: "28px", fontWeight: "bold" }}>
           {t("summary_label")}
         </Typography>
-        {!loading ? (
-          <Button
-            disabled={selectedFiles.length === 0}
-            onClick={fetchSummary}
-            style={{ marginTop: 16 }}
-            sx={{
-              backgroundColor: "#194BFB",
-              padding: "8px 12px",
-              borderRadius: 2,
-              color: "white",
-              fontWeight: "bold",
-              "&.Mui-disabled": {
-                backgroundColor: "#E0E0E0",
-                color: "#B1ACA6",
-              },
-            }}
-          >
-            {t("summarize_button_text")}
-          </Button>
-        ) : (
-          <CircularProgress size="30px" sx={{ marginTop: 2 }} />
-        )}
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          {!loading ? (
+            <Button
+              disabled={selectedFiles.length === 0}
+              onClick={fetchSummary}
+              style={{ marginTop: 16 }}
+              sx={{
+                backgroundColor: "#194BFB",
+                padding: "8px 12px",
+                borderRadius: 2,
+                color: "white",
+                fontWeight: "bold",
+                "&.Mui-disabled": {
+                  backgroundColor: "#E0E0E0",
+                  color: "#B1ACA6",
+                },
+              }}
+            >
+              {t("summarize_button_text")}
+            </Button>
+          ) : (
+            <CircularProgress size="30px" sx={{ marginTop: 2 }} />
+          )}
+          {summary && (
+            <Button
+              sx={{
+                border: "1px solid #194BFB",
+                padding: "8px 12px",
+                borderRadius: 2,
+                color: "#194BFB",
+                fontWeight: "bold",
+                background: "white",
+              }}
+              onClick={exportToPDF}
+            >
+              Export
+            </Button>
+          )}
+        </Box>
 
         <Typography sx={{ padding: "12px", marginTop: "12px" }}>
-          <div ref={summaryRef}>
+          <div id="summary">
             <MuiMarkdown
               overrides={{
                 ...getOverrides({}), // Keeps other default overrides
@@ -167,8 +145,6 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
               {summary}
             </MuiMarkdown>
           </div>
-
-          {summary && <Button onClick={exportToPDF}>Export</Button>}
         </Typography>
       </Card>
     </Grid>

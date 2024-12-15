@@ -5,11 +5,47 @@ import ReportsGrid from "../components/ReportsGrid";
 import Navbar from "../components/Navbar";
 import Filters from "../components/Filters";
 import PdfViewer from "../components/PdfViewer";
-import { Typography, Grid2 as Grid, Box, Skeleton } from "@mui/material";
+import {
+  Typography,
+  Grid2 as Grid,
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+} from "@mui/material";
 import i18n from "../i18n";
 import { useTranslation } from "react-i18next";
-import { getReports } from "../api"; // Import getReports function
+import { getReports } from "../api";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import { useNavigate } from "react-router-dom";
+
+const SessionExpiredDialog = ({ open, handleClose }) => {
+  const { t } = useTranslation();
+
+  const navigate = useNavigate();
+
+  // Navigate to the login page when the user clicks the "Log In" button
+  const handleLoginClick = () => {
+    navigate("/login");
+    handleClose(); // Close the dialog when navigating
+  };
+
+  return (
+    <Dialog open={open} disableBackdropClick disableEscapeKeyDown>
+      <DialogTitle>Session Expired</DialogTitle>
+      <DialogContent>
+        <p>{t("session_expired")}</p>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleLoginClick} sx={{ color: "#194BFB" }}>
+          {t("log_in")}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 const Home = ({ handleFeedback, toggleLanguage }) => {
   const [loading, setLoading] = useState(true);
@@ -17,19 +53,19 @@ const Home = ({ handleFeedback, toggleLanguage }) => {
   const [selectedPdf, setSelectedPdf] = useState(null);
   const [data, setData] = useState([]);
   const [filters, setFilters] = useState({ reportType: "", year: "" });
+  const [openDialog, setOpenDialog] = useState(false);
 
   const { t } = useTranslation();
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const jsonData = await getReports();
+      const jsonData = await getReports(); // Fetch reports using the updated api.js
       setData(jsonData);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      setOpenDialog(true);
     } finally {
       setLoading(false);
-      console.log(data.length);
     }
   };
 
@@ -56,6 +92,10 @@ const Home = ({ handleFeedback, toggleLanguage }) => {
   return (
     <ProtectedRoute>
       <Navbar toggleLanguage={toggleLanguage} />
+      <SessionExpiredDialog
+        open={openDialog}
+        handleClose={() => setOpenDialog(false)}
+      />
       <Box p={2}>
         <Typography
           sx={{
