@@ -18,7 +18,6 @@ import {
 import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import { HiOutlineGlobeAlt } from "react-icons/hi";
 
 const SignInContainer = styled(Stack)(({ theme }) => ({
   height: "calc((1 - var(--template-frame-height, 0)) * 100dvh)",
@@ -89,7 +88,7 @@ const Login = ({ handleFeedback }) => {
       localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
       navigate("/");
     } catch (error) {
-      handleFeedback("error", "Error with Login");
+      handleFeedback("error", t("login_error"));
     } finally {
       setLoading(false);
       setUsername("");
@@ -101,45 +100,9 @@ const Login = ({ handleFeedback }) => {
   return (
     <SignInContainer direction="column" justifyContent="space-between">
       <div>
-        <Button
-          onClick={() => {
-            setOpen(!open);
-          }}
-        >
-          English
+        <Button onClick={toggleLanguage}>
+          {i18n.language === "en" ? "العربية" : "English"}
         </Button>
-        <Menu
-          onClick={() => {
-            setOpen(false);
-          }}
-          open={open}
-          sx={{
-            mt: 6.5,
-            ml: 1.5,
-            "& .MuiAvatar-root": {
-              width: 32,
-              height: 32,
-              ml: -0.5,
-              mr: 1,
-            },
-            "&::before": {
-              content: '""',
-              display: "block",
-              position: "absolute",
-              top: 0,
-              right: 14,
-              width: 10,
-              height: 10,
-              bgcolor: "background.paper",
-              transform: "translateY(-50%) rotate(45deg)",
-              zIndex: 0,
-            },
-          }}
-          transformOrigin={{ horizontal: "left", vertical: "top" }}
-          anchorOrigin={{ horizontal: "left", vertical: "top" }}
-        >
-          <MenuItem>Arabic</MenuItem>
-        </Menu>
       </div>
 
       <CardCustom>
@@ -209,7 +172,10 @@ const Login = ({ handleFeedback }) => {
           </FormControl>
 
           {loading ? (
-            <CircularProgress />
+            <CircularProgress
+              size={"30px"}
+              sx={{ marginTop: 2, alignSelf: "center" }}
+            />
           ) : (
             <Button
               type="submit"
