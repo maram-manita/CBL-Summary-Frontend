@@ -1,18 +1,15 @@
-import os
 import re
+import requests
+from urllib.parse import urljoin, unquote
+from bs4 import BeautifulSoup
+
 from django.core.management.base import BaseCommand
-from django.conf import settings
 from api.models import Report
 
 class Command(BaseCommand):
-    help = 'Populate the database with report data using remote URL paths.'
+    help = 'Populate the database with report data from a remote directory listing.'
 
     def handle(self, *args, **options):
-        # Directory containing the reports locally (assuming it still exists)
-        # If you no longer have them locally, you'll need a different approach.
-        media_reports_dir = os.path.join(settings.MEDIA_ROOT, "reports")
-
-        # Base URL prefix where files are now hosted
         base_url = "http://206.189.52.179/api/files/CBL_Reports/"
 
         def extract_year(file_name):
@@ -21,49 +18,66 @@ class Command(BaseCommand):
             valid_years = [int(year) for year in years if 1900 <= int(year) <= 2100]
             return str(max(valid_years)) if valid_years else 'عام'
 
-        # Identify folders in the local directory
-        folders = [
-            folder for folder in os.listdir(media_reports_dir)
-            if os.path.isdir(os.path.join(media_reports_dir, folder))
-        ]
+        # Get the main page listing
+        main_page = requests.get(base_url)
+        main_soup = BeautifulSoup(main_page.text, 'html.parser')
 
-        for folder in folders:
-            folder_path = os.path.join(media_reports_dir, folder)
-            report_type = folder
+        # In the HTML directory listing, directories end with '/'
+        # We identify them by checking if href ends with '/'
+        # They represent "report types"
+        report_type_links = []
+        for link in main_soup.find_all('a', href=True):
+            href = link['href']
+            # Directories typically end with '/', exclude '../'
+            if href.endswith('/') and href not in ('../', './'):
+                report_type_links.append(href)
 
-            if os.path.exists(folder_path):
-                file_groups = {}
-                # Group files by their base name (ignoring extension)
-                for file_name in os.listdir(folder_path):
-                    file_path = os.path.join(folder_path, file_name)
-                    if os.path.isfile(file_path):
-                        base_name, ext = os.path.splitext(file_name)
-                        if base_name not in file_groups:
-                            file_groups[base_name] = {}
-                        file_groups[base_name][ext] = file_name
+        # Now we have a list of directories, each representing a report type
+        # For each directory, we fetch its page and parse PDF and MD files
+        for report_type_href in report_type_links:
+            # The report type name can be deduced from the href by removing trailing '/'
+            # Since href is percent-encoded, we decode it.
+            report_type_name = unquote(report_type_href.strip('/'))
 
-                # Create Report entries
-                for base_name, files in file_groups.items():
-                    pdf_file_name = files.get(".pdf")
-                    md_file_name = files.get(".md")
+            report_type_url = urljoin(base_url, report_type_href)
+            type_page = requests.get(report_type_url)
+            type_soup = BeautifulSoup(type_page.text, 'html.parser')
 
-                    year = extract_year(base_name)
+            # Collect files by base name (ignoring extension)
+            file_groups = {}
 
-                    # Construct the remote URL paths
-                    pdf_rel_path = None
-                    if pdf_file_name:
-                        pdf_rel_path = f"{base_url}{report_type}/{pdf_file_name}"
+            for link in type_soup.find_all('a', href=True):
+                file_href = link['href']
+                # Ignore parent directory link
+                if file_href in ('../', './'):
+                    continue
+                
+                # Decode filename for processing (to extract year, etc.)
+                decoded_filename = unquote(file_href)
+                if decoded_filename.lower().endswith(('.pdf', '.md')):
+                    base_name, ext = decoded_filename.rsplit('.', 1)
+                    ext = '.' + ext  # re-add the dot
+                    if base_name not in file_groups:
+                        file_groups[base_name] = {}
+                    
+                    # Store the full URL as given by the href for this file
+                    file_url = urljoin(report_type_url, file_href)
+                    file_groups[base_name][ext] = file_url
 
-                    md_rel_path = None
-                    if md_file_name:
-                        md_rel_path = f"{base_url}{report_type}/{md_file_name}"
+            # Now create Report entries
+            for base_name, files in file_groups.items():
+                pdf_url = files.get('.pdf')
+                md_url = files.get('.md')
 
-                    Report.objects.create(
-                        report_type=report_type,
-                        year=year,
-                        name=base_name,
-                        pdf_path=pdf_rel_path,
-                        md_path=md_rel_path
-                    )
+                year = extract_year(base_name)
 
-        self.stdout.write("Report data populated into the database with remote URL paths.")
+                # Create report entry
+                Report.objects.create(
+                    report_type=report_type_name,
+                    year=year,
+                    name=base_name,
+                    pdf_path=pdf_url,
+                    md_path=md_url
+                )
+
+        self.stdout.write("Report data populated into the database from remote URL paths.")
