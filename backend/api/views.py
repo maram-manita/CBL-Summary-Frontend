@@ -6,9 +6,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 import os
+import pypandoc
+import base64
+import tempfile
 import requests
 from .serializers import UserSerializer, ReportSerializer
-from .models import Report
+from api.models import Report
 
 class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -133,3 +136,75 @@ class SummarizeView(APIView):
             return Response({"error": "Error fetching summary from Gemini API.", "details": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
         except (KeyError, IndexError) as e:
             return Response({"error": "Unexpected response structure from Gemini API.", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# -----------------------------
+# New Code: SummarizeExportView
+# -----------------------------
+
+def convert_markdown_to_pdf(markdown_text, language='en'):
+    
+    extra_args = [
+        '--standalone',
+        '--from=markdown+pipe_tables',
+        '--pdf-engine=xelatex',
+        '--variable', f'lang={language}',
+       '--variable', 'mainfont=Tajawal',
+        '--variable', 'dir=auto',
+        '--toc'
+    ]
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".md") as md_file:
+        md_file.write(markdown_text.encode('utf-8'))
+        md_file_path = md_file.name
+
+    pypandoc.convert_file(md_file_path, 'pdf', outputfile=md_file_path + ".pdf", extra_args=extra_args)
+    os.remove(md_file_path)  
+    pdf_path = md_file_path + ".pdf"
+    return pdf_path
+
+def convert_markdown_to_docx(markdown_text):
+
+    extra_args = ['--from=markdown+pipe_tables']
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".md") as md_file:
+        md_file.write(markdown_text.encode('utf-8'))
+        md_file_path = md_file.name
+
+    pypandoc.convert_file(md_file_path, 'docx', outputfile=md_file_path + ".docx", extra_args=extra_args)
+    os.remove(md_file_path)
+    docx_path = md_file_path + ".docx"
+    return docx_path
+
+class SummarizeExportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        summary_text = request.data.get("summary_text", "")
+        language = request.data.get("language", "en")  
+
+        if not summary_text:
+            return Response({"error": "No summary text provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        pdf_path = convert_markdown_to_pdf(summary_text, language=language)
+        # Convert markdown summary to DOCX
+        docx_path = convert_markdown_to_docx(summary_text)
+
+        with open(pdf_path, 'rb') as pdf_file:
+            pdf_content = pdf_file.read()
+        with open(docx_path, 'rb') as docx_file:
+            docx_content = docx_file.read()
+
+        # Clean up temporary files
+        os.remove(pdf_path)
+        os.remove(docx_path)
+
+        # Encode files in base64 for JSON response
+        pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
+        docx_base64 = base64.b64encode(docx_content).decode('utf-8')
+
+        return Response(
+            {
+                "pdf_base64": pdf_base64,
+                "docx_base64": docx_base64
+            },
+            status=status.HTTP_200_OK
+        )
