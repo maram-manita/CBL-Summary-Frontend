@@ -27,7 +27,7 @@ const Navbar = ({ toggleLanguage }) => {
       <Toolbar>
         {/* Logo */}
         <Typography variant="h6" style={{ flexGrow: 1 }}>
-          <img src="src/assets/logo2.png" alt="Logo" style={{ height: 40 }} />
+          <img src="/images/logo2.png" alt="Logo" style={{ height: 40 }} />
         </Typography>
 
         <Box
