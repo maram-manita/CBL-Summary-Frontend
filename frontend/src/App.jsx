@@ -11,6 +11,9 @@ import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
+if (!["en", "ar"].includes(i18n.language)) {
+  i18n.changeLanguage("en"); // Default to English if the cached language is not valid
+}
 // RegisterWithLogout Component
 function RegisterWithLogout() {
   localStorage.clear();
@@ -24,6 +27,8 @@ const App = () => {
     severity: "success",
     showAlert: false,
   });
+  const [language, setLanguage] = useState(i18n.language || "en"); // Initialize from i18n
+
   const handleFeedback = (type, message) => {
     setFeedback({
       message: message,
@@ -35,20 +40,20 @@ const App = () => {
     }, 3500);
   };
   const toggleLanguage = () => {
-    const currentLanguage = i18n.language || "en"; // Get current language from i18n
-    const newLanguage = currentLanguage === "en" ? "ar" : "en";
-    i18n.changeLanguage(newLanguage);
-    document.dir = newLanguage === "ar" ? "rtl" : "ltr";
+    const newLanguage = language === "en" ? "ar" : "en";
+    i18n.changeLanguage(newLanguage).then(() => {
+      setLanguage(newLanguage); // Update local state after changing language
+      document.dir = newLanguage === "ar" ? "rtl" : "ltr"; // Update document direction
+    });
   };
 
-  const theme = createTheme({
-    direction: i18n.language === "ar" ? "rtl" : "ltr",
-  });
-
   useEffect(() => {
-    document.dir = i18n.language === "ar" ? "rtl" : "ltr";
-    console.log(i18n.language);
-  }, [i18n.language]);
+    document.dir = language === "ar" ? "rtl" : "ltr"; // Ensure document direction matches language
+  }, [language]);
+
+  const theme = createTheme({
+    direction: language === "ar" ? "rtl" : "ltr",
+  });
 
   return (
     <ThemeProvider theme={theme}>
@@ -80,7 +85,13 @@ const App = () => {
             />
             <Route
               path="/login"
-              element={<Login handleFeedback={handleFeedback} />}
+              element={
+                <Login
+                  handleFeedback={handleFeedback}
+                  toggleLanguage={toggleLanguage}
+                  language={i18n.language}
+                />
+              }
             />
             <Route path="/register" element={<RegisterWithLogout />} />
             <Route path="*" element={<NotFound />} />

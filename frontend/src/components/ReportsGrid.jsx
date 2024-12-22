@@ -1,13 +1,6 @@
 import React from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import {
-  Button,
-  Box,
-  Skeleton,
-  Grid2 as Grid,
-  Container,
-  Paper,
-} from "@mui/material";
+import { Button, Box, useMediaQuery } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import "../App.css";
 
@@ -20,9 +13,18 @@ const ReportsGrid = ({
   handleViewPdf,
 }) => {
   const { t } = useTranslation();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const handleDownload = (pdfPath) => {
+    const link = document.createElement("a");
+    link.href = pdfPath; // File URL
+    link.download = pdfPath.split("/").pop(); // Set the download file name to the last part of the URL
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
-    <Box p={2}>
+    <Box p={2} sx={{ height: "100%" }}>
       <DataGrid
         rows={filteredData.map((row) => ({
           id: row.id,
@@ -34,6 +36,7 @@ const ReportsGrid = ({
             field: "name",
             headerName: "File Name",
             flex: 1,
+
             renderCell: (params) => (
               <Box
                 sx={{
@@ -49,7 +52,7 @@ const ReportsGrid = ({
           {
             field: "actions",
             headerName: "Actions",
-            width: 150,
+            width: 100,
             renderCell: (params) => (
               <Box
                 sx={{
@@ -61,12 +64,20 @@ const ReportsGrid = ({
                 }}
               >
                 <Button
-                  onClick={() => handleViewPdf(params.row.pdfPath)}
+                  onClick={
+                    isMobile
+                      ? () => {
+                          handleDownload(params.row.pdfPath);
+                        }
+                      : () => handleViewPdf(params.row.pdfPath)
+                  }
                   sx={{
                     border: "1px solid #194BFB",
-                    padding: "4px 12px",
+                    padding: { xs: "4px", sm: "4px 12px" },
+                    width: "60%",
                     borderRadius: 2,
                     color: "#194BFB",
+                    fontSize: { xs: "12px", sm: "14px" },
                     fontWeight: "bold",
                     background: "none",
                     transition: "all 0.3s ease",
@@ -95,7 +106,12 @@ const ReportsGrid = ({
             "&.Mui-checked": {
               color: "#194BFB", // Checkbox color when checked
             },
+            height: "5px",
+            "& svg": {
+              fontSize: { xs: "1.2rem", sm: "1.5rem" },
+            },
           },
+
           overflowY: "hidden",
           overflowX: "hidden",
         }}

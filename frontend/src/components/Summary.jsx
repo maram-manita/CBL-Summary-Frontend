@@ -7,6 +7,7 @@ import {
   Grid2 as Grid,
   CircularProgress,
   Box,
+  useMediaQuery,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { MuiMarkdown, getOverrides } from "mui-markdown";
@@ -18,6 +19,7 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
   const { t } = useTranslation();
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   const fetchSummary = async () => {
     setLoading(true);
@@ -41,7 +43,7 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
     });
   };
   return (
-    <Grid item size={7}>
+    <Grid item size={{ xs: 12, sm: 7 }}>
       <Card variant="outlined" style={{ padding: 16, height: "100%" }}>
         <Typography sx={{ fontSize: "28px", fontWeight: "bold" }}>
           {t("summary_label")}
@@ -86,7 +88,9 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
           )}
         </Box>
 
-        <Typography sx={{ padding: "12px", marginTop: "12px" }}>
+        <Typography
+          sx={{ padding: { xs: "4px", sm: "12px" }, marginTop: "12px" }}
+        >
           <div id="summary">
             <MuiMarkdown
               overrides={{
@@ -95,7 +99,7 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
                   component: "p",
                   props: {
                     style: {
-                      fontSize: "32px",
+                      fontSize: isMobile ? "24px" : "32px",
                       fontWeight: "bold",
                       wordSpacing: "-0.1em",
                       margin: "8px 0",
@@ -106,7 +110,7 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
                   component: "p",
                   props: {
                     style: {
-                      fontSize: "24px",
+                      fontSize: isMobile ? "20px" : "24px",
                       fontWeight: "bold",
                       wordSpacing: "-0.1em",
                       margin: "4px 0",

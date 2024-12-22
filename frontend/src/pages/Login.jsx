@@ -12,12 +12,11 @@ import {
   Button,
   Stack,
   Typography,
-  Menu,
-  MenuItem,
 } from "@mui/material";
 import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
+import { PiEyeClosedBold, PiEyeBold } from "react-icons/pi";
 
 const SignInContainer = styled(Stack)(({ theme }) => ({
   height: "calc((1 - var(--template-frame-height, 0)) * 100dvh)",
@@ -61,22 +60,14 @@ const CardCustom = styled(MuiCard)(({ theme }) => ({
   }),
 }));
 
-const Login = ({ handleFeedback }) => {
+const Login = ({ handleFeedback, toggleLanguage, language }) => {
   const [userNameError, setuserNameError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
-  const [open, setOpen] = useState(false);
-
+  const [passwordVisibile, setPasswordVisibile] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const toggleLanguage = () => {
-    const currentLanguage = i18n.language || "en"; // Get current language from i18n
-    const newLanguage = currentLanguage === "en" ? "ar" : "en";
-    i18n.changeLanguage(newLanguage);
-    document.dir = newLanguage === "ar" ? "rtl" : "ltr";
-  };
 
   const handleSubmit = async (e) => {
     setLoading(true);
@@ -95,13 +86,13 @@ const Login = ({ handleFeedback }) => {
       setPassword("");
     }
   };
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <SignInContainer direction="column" justifyContent="space-between">
       <div>
         <Button onClick={toggleLanguage}>
-          {i18n.language === "en" ? "العربية" : "English"}
+          {language === "en" ? "العربية" : "English"}
         </Button>
       </div>
 
@@ -154,21 +145,43 @@ const Login = ({ handleFeedback }) => {
               {t("password")}
             </FormLabel>
 
-            <TextField
-              error={passwordError}
-              // helperText={passwordErrorMessage}
-              name="password"
-              placeholder="••••••••"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              autoFocus
-              required
-              fullWidth
-              variant="outlined"
-              color={passwordError ? "error" : "primary"}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div style={{ position: "relative" }}>
+              <TextField
+                error={passwordError}
+                // helperText={passwordErrorMessage}
+                name="password"
+                placeholder="••••••••"
+                type={passwordVisibile ? "text" : "password"}
+                id="password"
+                autoComplete="current-password"
+                autoFocus
+                required
+                fullWidth
+                variant="outlined"
+                color={passwordError ? "error" : "primary"}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <span
+                style={{
+                  position: "absolute",
+                  [language === "ar" ? "left" : "right"]: "10px",
+                  top: "55%",
+                  transform: "translateY(-50%)",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  setPasswordVisibile(!passwordVisibile);
+                }}
+              >
+                {!passwordVisibile ? (
+                  <PiEyeClosedBold
+                    style={{ fontSize: "20px", color: "#00000099" }}
+                  />
+                ) : (
+                  <PiEyeBold style={{ fontSize: "20px", color: "#00000099" }} />
+                )}
+              </span>
+            </div>
           </FormControl>
 
           {loading ? (

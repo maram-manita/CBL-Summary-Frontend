@@ -16,16 +16,18 @@ i18n
         translation: ar,
       },
     },
-    fallbackLng: "en", // Default language
+    fallbackLng: "en",
     load: "languageOnly",
     detection: {
-      caches: ["localStorage", "cookie"], // Cache detected language
-      checkWhiteList: true,
+      order: ["localStorage", "cookie", "navigator"],
+      caches: ["localStorage", "cookie"],
+      checkWhitelist: true,
+      lookupLocalStorage: "i18nextLng",
+      lookupCookie: "i18nextLng",
     },
-
     whitelist: ["en", "ar"],
     interpolation: {
-      escapeValue: false, // React already escapes output
+      escapeValue: false,
     },
   });
 

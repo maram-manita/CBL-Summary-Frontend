@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogTitle,
   Button,
+  useMediaQuery,
 } from "@mui/material";
 import i18n from "../i18n";
 import { useTranslation } from "react-i18next";
@@ -55,6 +56,7 @@ const Home = ({ handleFeedback, toggleLanguage }) => {
   const [filters, setFilters] = useState({ reportType: "", year: "" });
   const [openDialog, setOpenDialog] = useState(false);
 
+  const isMobile = useMediaQuery("(max-width:600px)");
   const { t } = useTranslation();
 
   const fetchData = async () => {
@@ -132,7 +134,7 @@ const Home = ({ handleFeedback, toggleLanguage }) => {
               data={data}
               handleFeedback={handleFeedback}
             />
-            <PdfViewer selectedPdf={selectedPdf} />
+            {!isMobile && <PdfViewer selectedPdf={selectedPdf} />}
           </Grid>
         </>
       ) : (
