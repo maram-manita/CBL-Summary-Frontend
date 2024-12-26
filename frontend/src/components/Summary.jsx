@@ -8,24 +8,33 @@ import {
   CircularProgress,
   Box,
   useMediaQuery,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { MuiMarkdown, getOverrides } from "mui-markdown";
-import { summarizeReports } from "../api";
+import { summarizeReports, exportWord } from "../api";
 import { BiExport } from "react-icons/bi";
+import { GrDocumentPdf, GrDocumentWord } from "react-icons/gr";
+
+import { HiDownload } from "react-icons/hi";
 import html2pdf from "html2pdf.js";
+import { TbFileTypeDocx, TbFileTypePdf } from "react-icons/tb";
 
 const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
   const { t } = useTranslation();
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [open, setOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width:600px)");
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const fetchSummary = async () => {
+    console.log(selectedFiles);
     setLoading(true);
     try {
       const response = await summarizeReports(selectedFiles, language || "en");
-      // response should be { summary: "..." }
       setSummary(response.summary);
       handleFeedback("success", t("summary_success_message"));
     } catch (error) {
@@ -35,13 +44,55 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
       setLoading(false);
     }
   };
-  const exportToPDF = () => {
-    const element = document.querySelector("#summary");
 
-    html2pdf(element, {
-      margin: 20,
-    });
+  const exportToPDF = async () => {
+    const baseURL = "https://ai-api.tatweer.dev";
+    setExporting(true);
+    try {
+      const response = await exportWord(summary, language || "en");
+      handleFeedback("success", "File export successfully");
+
+      if (response.pdf_url) {
+        const link = document.createElement("a");
+        link.href = `${baseURL}${response.pdf_url}`;
+        link.download = `${selectedFiles}.pdf`; // Adjust file name if needed
+        link.target = "_blank"; // Opens the file in a new tab
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      handleFeedback("error", t("pdf_export_error_message"));
+    } finally {
+      setExporting(false);
+    }
   };
+
+  const exportToWord = async () => {
+    const baseURL = "https://ai-api.tatweer.dev";
+    setExporting(true);
+    try {
+      const response = await exportWord(summary, language || "en");
+      handleFeedback("success", "File export successfully");
+
+      if (response.docx_url) {
+        const link = document.createElement("a");
+        link.href = `${baseURL}${response.docx_url}`;
+        link.download = `${selectedFiles}.docx`;
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error("Error exporting Word:", error);
+      handleFeedback("error", t("word_export_error_message"));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <Grid item size={{ xs: 12, sm: 7 }}>
       <Card variant="outlined" style={{ padding: 16, height: "100%" }}>
@@ -72,19 +123,85 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
             <CircularProgress size="30px" sx={{ marginTop: 2 }} />
           )}
           {summary && (
-            <Button
-              sx={{
-                border: "1px solid #194BFB",
-                padding: "8px 12px",
-                borderRadius: 2,
-                color: "#194BFB",
-                fontWeight: "bold",
-                background: "white",
-              }}
-              onClick={exportToPDF}
-            >
-              Export
-            </Button>
+            <div>
+              <Button
+                onClick={(event) => {
+                  setAnchorEl(event.currentTarget); // Set the button as the anchor element
+                  setOpen(!open);
+                }}
+                style={{ marginTop: 16 }}
+                sx={{
+                  border: "1px solid #194BFB",
+                  padding: "8px 12px",
+                  borderRadius: 2,
+                  color: "#194BFB",
+                  fontSize: { xs: "12px", sm: "14px" },
+                  fontWeight: "bold",
+                  background: "none",
+                  transition: "all 0.3s ease",
+                  display: "flex",
+                  justifyContent: "center",
+                  "&:hover": {
+                    background: "#194BFB",
+                    color: "#fff",
+                  },
+
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <HiDownload /> Export
+              </Button>
+              <Menu
+                id="basic-menu"
+                open={open}
+                onClose={() => {
+                  setOpen(false);
+                  setAnchorEl(null);
+                }}
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+                PaperProps={{
+                  style: {
+                    marginTop: "8px",
+                  },
+                }}
+              >
+                <MenuItem>
+                  <Button
+                    onClick={exportToWord}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <GrDocumentWord /> Export to Word
+                  </Button>
+                </MenuItem>
+                <MenuItem>
+                  <Button
+                    onClick={exportToPDF}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <GrDocumentPdf /> Export to PDF
+                  </Button>
+                </MenuItem>
+              </Menu>
+            </div>
           )}
         </Box>
 

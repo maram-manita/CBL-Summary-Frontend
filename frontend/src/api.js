@@ -121,4 +121,15 @@ export const summarizeMarkdown = async (text, language) => {
   }
 };
 
+export const exportWord = async (summary_text, language = "en") => {
+  try {
+    const response = await api.post("/api/summarize/export/", {
+      summary_text,
+      language,
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 export default api;
