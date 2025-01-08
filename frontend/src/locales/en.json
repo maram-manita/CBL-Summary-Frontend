@@ -21,5 +21,7 @@
   "logout": "log out",
   "no_pdf_selected": "No PDF selected",
   "session_expired": "Your session has expired. Please log in again",
-  "login_error": "Username or password is incorrect"
+  "login_error": "Username or password is incorrect",
+  "file_download_success": "File successfully exported",
+  "file_download_error": "Error exporting file"
 }

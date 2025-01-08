@@ -22,5 +22,7 @@
   "logout": "تسجيل الخروج",
   "no_pdf_selected": "يرجى اختيار مستند",
   "session_expired": "يرجى تسجيل الدخول مرة اخرى",
-  "login_error": "كلمة المرور غير صحيحة"
+  "login_error": "كلمة المرور غير صحيحة",
+  "file_download_success": "تم تحميل الملف بنجاح",
+  "file_download_error": "حدث خطأ في تحميل الملف"
 }

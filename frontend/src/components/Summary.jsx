@@ -1,4 +1,3 @@
-// frontend/src/components/Summary.jsx
 import React, { useState, useRef } from "react";
 import {
   Typography,
@@ -14,21 +13,17 @@ import {
 import { useTranslation } from "react-i18next";
 import { MuiMarkdown, getOverrides } from "mui-markdown";
 import { summarizeReports, exportWord } from "../api";
-import { BiExport } from "react-icons/bi";
+import { HiDownload } from "react-icons/hi";
 import { GrDocumentPdf, GrDocumentWord } from "react-icons/gr";
 
-import { HiDownload } from "react-icons/hi";
-import html2pdf from "html2pdf.js";
-import { TbFileTypeDocx, TbFileTypePdf } from "react-icons/tb";
-
-const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
+const Summary = ({ selectedFiles, language, handleFeedback }) => {
   const { t } = useTranslation();
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [open, setOpen] = useState(false);
-  const isMobile = useMediaQuery("(max-width:600px)");
   const [anchorEl, setAnchorEl] = useState(null);
+  const [fileUrls, setFileUrls] = useState({ pdf: null, docx: null });
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   const fetchSummary = async () => {
     console.log(selectedFiles);
@@ -37,59 +32,39 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
       const response = await summarizeReports(selectedFiles, language || "en");
       setSummary(response.summary);
       handleFeedback("success", t("summary_success_message"));
+
+      // Prepare export files after summarization
+      const exportResponse = await exportWord(
+        response.summary,
+        language || "en"
+      );
+      setFileUrls({
+        pdf: exportResponse.pdf_url,
+        docx: exportResponse.docx_url,
+      });
     } catch (error) {
-      console.error("Error fetching summary:", error);
+      console.error("Error fetching summary or preparing export files:", error);
       handleFeedback("error", t("summary_error_message"));
     } finally {
       setLoading(false);
     }
   };
 
-  const exportToPDF = async () => {
+  const handleDownload = (type) => {
     const baseURL = "https://ai-api.tatweer.dev";
-    setExporting(true);
-    try {
-      const response = await exportWord(summary, language || "en");
-      handleFeedback("success", "File export successfully");
+    const fileUrl = type === "pdf" ? fileUrls.pdf : fileUrls.docx;
 
-      if (response.pdf_url) {
-        const link = document.createElement("a");
-        link.href = `${baseURL}${response.pdf_url}`;
-        link.download = `${selectedFiles}.pdf`; // Adjust file name if needed
-        link.target = "_blank"; // Opens the file in a new tab
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      handleFeedback("error", t("pdf_export_error_message"));
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const exportToWord = async () => {
-    const baseURL = "https://ai-api.tatweer.dev";
-    setExporting(true);
-    try {
-      const response = await exportWord(summary, language || "en");
-      handleFeedback("success", "File export successfully");
-
-      if (response.docx_url) {
-        const link = document.createElement("a");
-        link.href = `${baseURL}${response.docx_url}`;
-        link.download = `${selectedFiles}.docx`;
-        link.target = "_blank";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (error) {
-      console.error("Error exporting Word:", error);
-      handleFeedback("error", t("word_export_error_message"));
-    } finally {
-      setExporting(false);
+    if (fileUrl) {
+      const link = document.createElement("a");
+      link.href = `${baseURL}${fileUrl}`;
+      link.download = `${selectedFiles}.${type}`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      handleFeedback("success", t("file_download_success"));
+    } else {
+      handleFeedback("error", t("file_download_error"));
     }
   };
 
@@ -126,7 +101,7 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
             <div>
               <Button
                 onClick={(event) => {
-                  setAnchorEl(event.currentTarget); // Set the button as the anchor element
+                  setAnchorEl(event.currentTarget);
                   setOpen(!open);
                 }}
                 style={{ marginTop: 16 }}
@@ -145,7 +120,6 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
                     background: "#194BFB",
                     color: "#fff",
                   },
-
                   alignItems: "center",
                   gap: "6px",
                 }}
@@ -174,31 +148,41 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
                   },
                 }}
               >
-                <MenuItem>
-                  <Button
-                    onClick={exportToWord}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <GrDocumentWord /> Export to Word
-                  </Button>
+                <MenuItem
+                  onClick={() => handleDownload("docx")}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    color: "#010E3C",
+                    padding: "12px",
+                    "&:hover": {
+                      backgroundColor: "#EBEFFF",
+                      color: "#194BFB",
+                      cursor: "pointer",
+                    },
+                  }}
+                >
+                  <GrDocumentWord /> Export to Word
                 </MenuItem>
-                <MenuItem>
-                  <Button
-                    onClick={exportToPDF}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <GrDocumentPdf /> Export to PDF
-                  </Button>
+                <MenuItem
+                  onClick={() => handleDownload("pdf")}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    color: "#010E3C",
+                    padding: "12px",
+                    "&:hover": {
+                      backgroundColor: "#EBEFFF",
+                      color: "#194BFB",
+                      cursor: "pointer",
+                    },
+                  }}
+                >
+                  <GrDocumentPdf /> Export to PDF
                 </MenuItem>
               </Menu>
             </div>
@@ -238,10 +222,22 @@ const Summary = ({ selectedFiles, language, handleFeedback, data }) => {
                   component: "p",
                   props: {
                     style: {
-                      fontSize: "20px",
+                      fontSize: "16px",
                       fontWeight: "bold",
                       wordSpacing: "-0.1em",
                       margin: "4px 0",
+                    },
+                  },
+                },
+                h4: {
+                  component: "p",
+                  props: {
+                    style: {
+                      fontSize: "16px",
+                      fontWeight: "bold",
+                      wordSpacing: "-0.1em",
+                      margin: "4px 0",
+                      fontColor: "red",
                     },
                   },
                 },
